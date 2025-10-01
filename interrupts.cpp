@@ -20,8 +20,14 @@ int main(int argc, char** argv) {
 
     /******************ADD YOUR VARIABLES HERE*************************/
 
+    int totalTime = 0;
+    const int context_save_restore = 10;
+    const int isr_time = 40;
 
-
+    auto log_activity = [&](int d, std::string a){
+        execution += std::to_string(totalTime) + ", " + std::to_string(d) + ", " + a + "\n"; 
+        totalTime += d;
+    };
     /******************************************************************/
 
     //parse each line of the input trace file
@@ -30,8 +36,25 @@ int main(int argc, char** argv) {
 
         /******************ADD YOUR SIMULATION CODE HERE*************************/
 
-
-
+        if (activity == "CPU"){
+            log_activity(duration_intr, "CPU BURST");
+        }
+        else if (activity == "SYSCALL")
+        {
+            log_activity(1, "switch to kernel mode");
+            log_activity(context_save_restore, "context saved");
+            log_activity(1, "find vector " + std::to_string(duration_intr) + " in memory position " + std::to_string(duration_intr));
+            log_activity(isr_time, "obtain ISR address");
+            log_activity(24, "call device driver");
+        }
+        else if (activity == "END_IO")
+        {
+            log_activity(1, "switch to kernel mode");
+            log_activity(context_save_restore, "context saved");
+            log_activity(1, "find vector " + std::to_string(duration_intr) + " in memory position " + std::to_string(duration_intr));
+            log_activity(35, "store information in memory");
+        }
+        
         /************************************************************************/
 
     }
