@@ -24,10 +24,7 @@ int main(int argc, char** argv) {
     const int context_save_restore = 10;
     const int isr_time = 40;
 
-    auto log_activity = [&](int d, std::string a){
-        execution += std::to_string(totalTime) + ", " + std::to_string(d) + ", " + a + "\n"; 
-        totalTime += d;
-    };
+
     /******************************************************************/
 
     //parse each line of the input trace file
@@ -37,24 +34,37 @@ int main(int argc, char** argv) {
         /******************ADD YOUR SIMULATION CODE HERE*************************/
 
         if (activity == "CPU"){
-            log_activity(duration_intr, "CPU BURST");
+            execution += std::to_string(totalTime) + ", " + std::to_string(duration_intr) + ", " + "CPU burst" + "\n"; 
+            totalTime += duration_intr;
         }
         else if (activity == "SYSCALL")
         {
-            log_activity(1, "switch to kernel mode");
-            log_activity(context_save_restore, "context saved");
-            log_activity(1, "find vector " + std::to_string(duration_intr) + " in memory position " + std::to_string(duration_intr));
-            log_activity(isr_time, "obtain ISR address");
-            log_activity(24, "call device driver");
+                auto [intr_seq, new_time] = intr_boilerplate(totalTime, duration_intr, context_save_restore, vectors);
+                execution += intr_seq;
+                totalTime = new_time;
+                // Add ISR and device driver steps
+                execution += std::to_string(totalTime) + ", "+ std::to_string(isr_time) + ", SYSCALL: Run the ISR\n";
+                totalTime += isr_time;
+                execution += std::to_string(totalTime) + ", "+ std::to_string(delays[duration_intr]) + ", Device Processing\n";
+                totalTime += delays[duration_intr];
+                execution += std::to_string(totalTime) + ", 1, IRET\n";
+                totalTime += 1;
+
         }
         else if (activity == "END_IO")
         {
-            log_activity(1, "switch to kernel mode");
-            log_activity(context_save_restore, "context saved");
-            log_activity(1, "find vector " + std::to_string(duration_intr) + " in memory position " + std::to_string(duration_intr));
-            log_activity(35, "store information in memory");
+                auto [intr_seq, new_time] = intr_boilerplate(totalTime, duration_intr, context_save_restore, vectors);
+                execution += intr_seq;  
+                totalTime = new_time;
+                // Add ISR and device driver steps
+                execution += std::to_string(totalTime) + ", " + std::to_string(isr_time) + ", END_IO\n";
+                totalTime += isr_time;
+                execution += std::to_string(totalTime) + ", "+ std::to_string(delays[duration_intr]) + ", Device Processing\n";
+                totalTime += delays[duration_intr];
+                execution += std::to_string(totalTime) + ", 1, IRET\n";
+                totalTime += 1;
         }
-        
+
         /************************************************************************/
 
     }
