@@ -29,9 +29,10 @@
  * 
  */
 std::tuple<std::vector<std::string>, std::vector<int>> parse_args(int argc, char** argv) {
-    if(argc != 4) {
-        std::cout << "ERROR!\nExpected 3 argument, received " << argc - 1 << std::endl;
-        std::cout << "To run the program, do: ./interrutps <your_trace_file.txt> <your_vector_table.txt> <your_device_table.txt>" << std::endl;
+    // argc should be 7: program name + 6 arguments
+    if(argc != 7) {
+        std::cout << "ERROR!\nExpected 6 arguments, received " << argc - 1 << std::endl;
+        std::cout << "To run the program, do: ./interrupts <trace.txt> <vector_table.txt> <device_table.txt> <output.txt> <context_time> <isr_time>" << std::endl;
         exit(1);
     }
 
@@ -128,17 +129,16 @@ std::pair<std::string, int> intr_boilerplate(int current_time, int intr_num, int
 }
 
 
-void write_output(std::string execution) {
-    std::ofstream output_file("execution.txt");
+void write_output(std::string execution, const char* output_filename) {
+    std::ofstream output_file(output_filename);
 
     if (output_file.is_open()) {
         output_file << execution;
         output_file.close();  // Close the file when done
-        std::cout << "File content overwritten successfully." << std::endl;
     } else {
-        std::cerr << "Error opening file!" << std::endl;
+        std::cerr << "Error opening file: " << output_filename << std::endl;
     }
 
-    std::cout << "Output generated in execution.txt" << std::endl;
+    std::cout << "Output generated in " << output_filename << std::endl;
 }
 #endif

@@ -21,9 +21,9 @@ int main(int argc, char** argv) {
     /******************ADD YOUR VARIABLES HERE*************************/
 
     int totalTime = 0;
-    const int context_save_restore = 10;
-    const int isr_time = 40;
-
+    const int context_save_restore = std::stoi(argv[5]);
+    const int isr_time = std::stoi(argv[6]);
+    int activity_time = 0;
 
     /******************************************************************/
 
@@ -43,10 +43,20 @@ int main(int argc, char** argv) {
                 execution += intr_seq;
                 totalTime = new_time;
                 // Add ISR and device driver steps
-                execution += std::to_string(totalTime) + ", "+ std::to_string(isr_time) + ", SYSCALL: Run the ISR\n";
+                activity_time = delays[duration_intr];
                 totalTime += isr_time;
-                execution += std::to_string(totalTime) + ", "+ std::to_string(delays[duration_intr]) + ", Device Processing\n";
-                totalTime += delays[duration_intr];
+                activity_time -= isr_time;
+                execution += std::to_string(totalTime) + ", "+ std::to_string(isr_time) + ", transfer data from device to memory\n";
+                totalTime += isr_time;
+                activity_time -= isr_time;
+                execution += std::to_string(totalTime) + ", "+ std::to_string(isr_time) + ", SYSCALL: Run the ISR\n";
+                
+                if (activity_time > 0){
+                    execution += std::to_string(totalTime) + ", "+ std::to_string(activity_time) + ", Check for errors\n";
+                    totalTime += activity_time;
+                    activity_time = 0;
+                }
+                
                 execution += std::to_string(totalTime) + ", 1, IRET\n";
                 totalTime += 1;
 
@@ -57,10 +67,17 @@ int main(int argc, char** argv) {
                 execution += intr_seq;  
                 totalTime = new_time;
                 // Add ISR and device driver steps
-                execution += std::to_string(totalTime) + ", " + std::to_string(isr_time) + ", END_IO\n";
-                totalTime += isr_time;
-                execution += std::to_string(totalTime) + ", "+ std::to_string(delays[duration_intr]) + ", Device Processing\n";
-                totalTime += delays[duration_intr];
+                activity_time = delays[duration_intr];
+                if (activity_time > isr_time){
+                    execution += std::to_string(totalTime) + ", " + std::to_string(isr_time) + ", ENDIO: run the ISR (device driver)\n";
+                    totalTime += isr_time;
+                    activity_time -= isr_time;
+                }
+                if (activity_time > 0){
+                    execution += std::to_string(totalTime) + ", "+ std::to_string(activity_time) + ", Check Device Status\n";
+                    totalTime += activity_time;
+                    activity_time = 0;
+                }
                 execution += std::to_string(totalTime) + ", 1, IRET\n";
                 totalTime += 1;
         }
@@ -71,7 +88,7 @@ int main(int argc, char** argv) {
 
     input_file.close();
 
-    write_output(execution);
+    write_output(execution, argv[4]);
 
     return 0;
 }
